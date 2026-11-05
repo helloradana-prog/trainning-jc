@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>João Alberto · Hellora Consultoria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --preto: #1a1a1a;
+    --preto-puro: #000000;
+    --cinza-claro: #f0f0f0;
+    --branco: #FFFFFF;
+    --tinta: #1a1a1a;
+    --tinta-suave: #666666;
+    --linha: #e5e5e5;
+    --sombra: 0 10px 28px rgba(26,26,26,0.12);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:'Jost', sans-serif;
+    background: var(--branco);
+    color: var(--tinta);
+    min-height:100vh;
+    padding-bottom: 90px;
+  }
+  .hero{
+    position:relative;
+    padding: 30px 20px 46px;
+    background: linear-gradient(135deg, #e8e8e8 0%, #fafafa 100%);
+    overflow:hidden;
+    color: var(--tinta);
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    right:-60px; top:-60px;
+    width:220px; height:220px;
+    background: radial-gradient(circle, rgba(26,26,26,0.15) 0%, rgba(26,26,26,0) 70%);
+    border-radius:50%;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    left:-40px; bottom:-80px;
+    width:180px; height:180px;
+    background: radial-gradient(circle, rgba(26,26,26,0.1) 0%, rgba(26,26,26,0) 70%);
+    border-radius:50%;
+  }
+  .hero-top{display:flex; justify-content:space-between; align-items:flex-start; position:relative; z-index:2;}
+  .eyebrow{
+    font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    opacity:.85; font-weight:500; color: var(--preto);
+  }
+  .nome{
+    font-family:'Fraunces', serif; font-style:italic; font-weight:500;
+    font-size:32px; margin: 4px 0 2px; line-height:1.05;
+  }
+  .sub{font-size:13px; opacity:.9;}
+  .pill{
+    background: rgba(26,26,26,0.1);
+    border:1px solid rgba(26,26,26,0.2);
+    color: var(--preto);
+    border-radius:100px; padding:6px 12px; font-size:12px;
+    backdrop-filter: blur(4px);
+    white-space:nowrap;
+  }
+  .countdown{position:relative; z-index:2; margin-top:10px; font-size:12.5px; color:var(--tinta-suave);}
+  .countdown b{color:var(--preto); font-weight:600;}
+  .tabs{
+    display:flex; gap:5px; padding: 0 10px; margin-top:-26px; position:relative; z-index:3;
+  }
+  .tab-btn{
+    flex:1; text-align:center; padding:12px 2px; border-radius:14px;
+    background:#fff; border:1px solid var(--linha);
+    font-family:'Jost'; font-size:11.5px; font-weight:500; color: var(--tinta-suave);
+    box-shadow: var(--sombra);
+    cursor:pointer; transition: all .15s ease;
+  }
+  .tab-btn.active{
+    background: linear-gradient(135deg, #1a1a1a, #333333);
+    color: var(--branco); border-color: transparent;
+  }
+  .content{ padding: 22px 16px 10px; max-width:560px; margin:0 auto;}
+  .view{display:none; animation: fade .25s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  .section-title{
+    font-family:'Fraunces'; font-style:italic; font-weight:500;
+    font-size:20px; margin: 18px 2px 10px; color: var(--preto);
+  }
+  .section-title:first-child{margin-top:0;}
+
+  .treino-switch{
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:8px;
+  }
+  .treino-chip{
+    flex:0 0 auto; padding:9px 16px; border-radius:100px; font-size:13px; font-weight:500;
+    background: var(--cinza-claro); color: var(--preto); border:1px solid var(--linha);
+    cursor:pointer; white-space:nowrap;
+  }
+  .treino-chip.active{ background: var(--preto-puro); color:#fff; border-color:var(--preto-puro);}
+
+  .day-title{font-family:'Fraunces'; font-style:italic; font-size:18px; margin:10px 2px 2px;}
+  .day-sub{font-size:12.5px; color:var(--tinta-suave); margin:0 2px 12px;}
+  .note{
+    background:var(--cinza-claro); border-radius:14px; padding:11px 13px; font-size:12.5px; line-height:1.5;
+    margin-bottom:12px; border-left:3px solid var(--preto);
+  }
+
+  .card{
+    background:#fff; border:1px solid var(--linha); border-radius:18px;
+    padding:14px 14px 12px; margin-bottom:12px; box-shadow: 0 4px 16px rgba(26,26,26,0.05);
+  }
+  .card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .ex-nome{font-size:15px; font-weight:500;}
+  .ex-foco{font-size:11.5px; color:var(--preto); background:var(--cinza-claro); border-radius:8px; padding:2px 8px; display:inline-block; margin-top:4px;}
+  .ex-obs{font-size:12px; color:var(--tinta-suave); margin-top:8px; line-height:1.45;}
+  .check{
+    width:26px; height:26px; border-radius:8px; border:2px solid var(--linha);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto;
+    transition: all .15s;
+  }
+  .check.done{ background: var(--preto); border-color: var(--preto); }
+  .check.done::after{content:"✓"; color:#fff; font-size:15px; font-weight:600;}
+  .badges{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; align-items:center;}
+  .badge{font-size:11px; padding:4px 9px; border-radius:8px; background:#f5f5f5; color:var(--tinta-suave); font-weight:500;}
+  .badge.dark{background:var(--preto); color:#fff;}
+  .mini-input{
+    margin-left:auto; display:flex; align-items:center; gap:4px; font-size:10.5px; color:var(--tinta-suave);
+  }
+  .mini-input input{
+    width:58px; border:1px solid var(--linha); border-radius:8px; padding:4px 6px;
+    font-family:'Jost'; font-size:11.5px; color:var(--tinta); text-align:center;
+  }
+  .mini-input input:focus{outline:none; border-color:var(--preto);}
+  .sub-item{font-size:12.5px; color:var(--tinta-suave); margin: 6px 0; padding: 6px 0; border-bottom: 1px solid var(--linha);}
+  .sub-item:last-child{border-bottom:none;}
+  .sub-item span{font-weight:500; color:var(--tinta);}
+
+  .rota-box{
+    margin-top:12px; background:#f9f9f9; border-radius:12px; padding:10px 12px;
+  }
+  .rota-nome{font-size:12px; font-weight:600; letter-spacing:.02em; margin-bottom:4px;}
+  .rota-desc{font-size:12.5px; color:var(--tinta-suave); line-height:1.55;}
+  .run-head-date{font-size:11.5px; color:var(--tinta-suave); margin-top:2px;}
+  .card.destaque{border:2px solid var(--preto);}
+
+  .zona-row{display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--linha); font-size:12.5px;}
+  .zona-row:last-child{border-bottom:none;}
+  .zona-tag{flex:0 0 74px; font-weight:600;}
+  .zona-txt{flex:1; color:var(--tinta-suave); line-height:1.45;}
+  .regra{display:flex; gap:10px; font-size:12.5px; line-height:1.5; padding:7px 0; border-bottom:1px solid var(--linha);}
+  .regra:last-child{border-bottom:none;}
+  .regra-n{flex:0 0 22px; height:22px; border-radius:7px; background:var(--preto); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:600;}
+
+  .save-bar{
+    position:sticky; bottom:0; padding: 12px 0 4px; background: linear-gradient(to top, #fff 60%, rgba(255,255,255,0));
+  }
+  .save-btn{
+    width:100%; border:none; padding:15px; border-radius:16px; font-family:'Jost'; font-size:15px; font-weight:500;
+    background: linear-gradient(135deg, #1a1a1a, #333333); color:#fff; cursor:pointer;
+    box-shadow: var(--sombra);
+  }
+  .save-btn:active{transform: scale(.98);}
+  .toast{
+    position:fixed; left:50%; bottom:100px; transform:translateX(-50%) translateY(20px);
+    background:var(--tinta); color:#fff; padding:10px 18px; border-radius:100px; font-size:13px;
+    opacity:0; transition: all .25s; pointer-events:none; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .guia-item{margin-bottom:14px; padding:12px; background:#f9f9f9; border-radius:12px;}
+  .guia-desc{font-size:13px; color:var(--tinta-suave); line-height:1.6; margin-top:6px;}
+  .guia-parte{margin:8px 0 6px 0; font-weight:500; color:var(--preto); font-size:12px;}
+
+  .week-switch{display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:14px;}
+  .week-chip{flex:0 0 auto; padding:7px 13px; border-radius:100px; font-size:12.5px; background:var(--cinza-claro); color:var(--preto); cursor:pointer; text-align:center; line-height:1.2;}
+  .week-chip small{display:block; font-size:10px; opacity:.7;}
+  .week-chip.active{background:var(--preto); color:#fff;}
+  .eval-cat{margin-bottom:16px;}
+  .eval-cat-name{font-size:13.5px; font-weight:500;}
+  .eval-cat-hint{font-size:11px; color:var(--tinta-suave); margin:2px 0 7px;}
+  .eval-scale{display:flex; gap:6px;}
+  .eval-dot{
+    flex:1; text-align:center; padding:9px 0; border-radius:10px; border:1px solid var(--linha);
+    font-size:13px; font-weight:500; color:var(--tinta-suave); cursor:pointer;
+  }
+  .eval-dot.active{background:var(--preto); color:#fff; border-color:var(--preto);}
+  textarea.obs{
+    width:100%; border:1px solid var(--linha); border-radius:12px; padding:10px; font-family:'Jost';
+    font-size:13px; min-height:70px; resize:vertical;
+  }
+  textarea.obs:focus{outline:none; border-color:var(--preto);}
+
+  .perfil-row{display:flex; justify-content:space-between; align-items:center; padding:12px 2px; border-bottom:1px solid var(--linha); font-size:13.5px;}
+  .perfil-row:last-child{border-bottom:none;}
+  .perfil-label{color:var(--tinta-suave);}
+  .perfil-value{font-weight:500; text-align:right;}
+  .peso-edit{display:flex; align-items:center; gap:8px;}
+  .peso-edit input{width:70px; border:1px solid var(--linha); border-radius:10px; padding:6px 8px; font-family:'Jost'; font-size:13.5px; text-align:right;}
+  .atencao-item{padding:10px 0; border-bottom:1px solid var(--linha); font-size:13px; line-height:1.5;}
+  .atencao-item:last-child{border-bottom:none;}
+  .atencao-item b{display:block; font-weight:600; margin-bottom:2px;}
+  .semana-row{display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--linha); font-size:13px;}
+  .semana-row:last-child{border-bottom:none;}
+  .semana-dia{flex:0 0 38px; font-weight:600;}
+  .semana-txt{flex:1; color:var(--tinta-suave);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-top">
+    <div>
+      <div class="eyebrow">Hellora Consultoria</div>
+      <div class="nome">João Alberto</div>
+      <div class="sub">Rumo à São Silvestre · 15 km</div>
+    </div>
+    <div class="pill" id="semanaPill">Semana 0</div>
+  </div>
+  <div class="countdown" id="countdown"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab-btn active" data-view="treino">Treino</div>
+  <div class="tab-btn" data-view="corrida">Corrida</div>
+  <div class="tab-btn" data-view="guia">Guia</div>
+  <div class="tab-btn" data-view="avaliacao">Avaliação</div>
+  <div class="tab-btn" data-view="perfil">Perfil</div>
+</div>
+
+<div class="content">
+
+  <!-- TREINO -->
+  <div class="view active" id="view-treino">
+    <div class="week-switch" id="weekSwitchTreino"></div>
+    <div class="treino-switch" id="treinoSwitch"></div>
+    <div id="weekNoteTreino"></div>
+    <div id="exList"></div>
+    <div class="save-bar">
+      <button class="save-btn" id="btnSalvarTreino">Salvar treino</button>
+    </div>
+  </div>
+
+  <!-- CORRIDA -->
+  <div class="view" id="view-corrida">
+    <div class="week-switch" id="weekSwitchCorrida"></div>
+    <div id="runList"></div>
+
+    <div class="section-title">Zonas de ritmo</div>
+    <div class="card">
+      <div class="zona-row"><div class="zona-tag">Z1 · Leve</div><div class="zona-txt">Conversa frases inteiras · <b>7:00–7:20 /km</b></div></div>
+      <div class="zona-row"><div class="zona-tag">Z2 · Prova</div><div class="zona-txt">Fala frases curtas · <b>6:50–7:00 /km</b></div></div>
+      <div class="zona-row"><div class="zona-tag">Z3 · Forte</div><div class="zona-txt">Só palavras soltas · <b>6:10–6:25 /km</b></div></div>
+      <div class="zona-row"><div class="zona-tag">Subida</div><div class="zona-txt">Esforço 8 de 10 · pelo esforço, não pelo pace</div></div>
+      <div class="note" style="margin:10px 0 2px;"><b>Pace do longão:</b> km 1–3 a 7:10–7:20 (lento de propósito) · km 4 até o fim a 6:55–7:05 · últimos 2 km livres se estiver bem, nunca abaixo de 6:40.</div>
+    </div>
+
+    <div class="section-title">Suas rotas</div>
+    <div class="card">
+      <div class="atencao-item"><b>R1 · Pista do Aeromodelismo</b>1 km de descida na ida · trecho plano na pista (3 km no padrão, varia conforme o treino) · 1 km de subida na volta. Usada nos treinos de ritmo, progressivo e Z2.</div>
+      <div class="atencao-item"><b>R2 · Ciclovia da Paulista</b>1 km de subida até a Paulista · ida e volta pela ciclovia até a Haddock Lobo · km 7→8 em descida · 8 km fixos. Asfalto da largada e da chegada.</div>
+      <div class="atencao-item"><b>R3 · Ibirapuera</b>1 km de descida até a passarela · voltas de ~3 km no parque (confira no Strava e ajuste o km extra) · volta com subidas leves e 500 m finais de subida forte. Começa descendo e termina subindo, como a prova.</div>
+      <div class="atencao-item"><b>Subida de 500 m</b>A subida forte do final da R3, perto de casa. Tiros: sobe forte com passada curta, desce trotando.</div>
+    </div>
+
+    <div class="section-title">Regras fixas</div>
+    <div class="card">
+      <div class="regra"><div class="regra-n">1</div><div>Os 3 primeiros km de qualquer corrida de rua são os mais lentos do treino.</div></div>
+      <div class="regra"><div class="regra-n">2</div><div>Dor no joelho 3 ou mais (0 a 10) no dia seguinte: a próxima corrida vira Z1 ou bike, e você me avisa.</div></div>
+      <div class="regra"><div class="regra-n">3</div><div>Longões de 12 km ou mais: comer 1h30 antes e testar gel ou bala de goma no km 7.</div></div>
+      <div class="regra"><div class="regra-n">4</div><div>Nunca correr em dias seguidos.</div></div>
+      <div class="regra"><div class="regra-n">5</div><div>Aviso de voz do Strava ligado em todos os treinos de rua.</div></div>
+      <div class="regra"><div class="regra-n">6</div><div>Descidas sempre com passada curta e controlada: é onde o joelho mais sofre.</div></div>
+      <div class="regra"><div class="regra-n">7</div><div>Correr na rua cedo ou no fim da tarde e levar água nos longões: calor e anemia não combinam.</div></div>
+      <div class="regra"><div class="regra-n">8</div><div>Inchaço, travamento, falseio ou dor durante a corrida: pare e procure o ortopedista.</div></div>
+    </div>
+    <div class="save-bar">
+      <button class="save-btn" id="btnSalvarCorrida">Salvar corrida</button>
+    </div>
+  </div>
+
+  <!-- GUIA -->
+  <div class="view" id="view-guia">
+    <div class="section-title">Guia de Execução</div>
+    <div class="note">Em todos os exercícios: solte o ar no esforço, nunca prenda a respiração. Para levantar do chão: role de lado, sente, espere 5 segundos e só então levante.</div>
+    <div id="guiaList"></div>
+  </div>
+
+  <!-- AVALIAÇÃO -->
+  <div class="view" id="view-avaliacao">
+    <div class="week-switch" id="weekSwitch"></div>
+    <div id="evalCats"></div>
+    <div class="eval-cat">
+      <div class="eval-cat-name">Observações da semana</div>
+      <textarea class="obs" id="evalObs" placeholder="Como foi a semana? Onde doeu o joelho? Teve tontura? Algo diferente na corrida?"></textarea>
+    </div>
+    <div class="save-bar">
+      <button class="save-btn" id="btnSalvarAvaliacao">Salvar avaliação</button>
+    </div>
+  </div>
+
+  <!-- PERFIL -->
+  <div class="view" id="view-perfil">
+    <div class="section-title">Perfil</div>
+    <div class="card">
+      <div class="perfil-row"><span class="perfil-label">Nome completo</span><span class="perfil-value">João Alberto</span></div>
+      <div class="perfil-row"><span class="perfil-label">Idade</span><span class="perfil-value">29 anos</span></div>
+      <div class="perfil-row"><span class="perfil-label">Altura</span><span class="perfil-value">190 cm</span></div>
+      <div class="perfil-row">
+        <span class="perfil-label">Peso atual</span>
+        <span class="peso-edit"><input type="number" id="pesoInput" step="0.1"> kg</span>
+      </div>
+      <div class="perfil-row"><span class="perfil-label">Peso inicial · meta</span><span class="perfil-value">84 kg → 80 kg</span></div>
+      <div class="perfil-row"><span class="perfil-label">Qualidade Sono</span><span class="perfil-value">7/10</span></div>
+      <div class="perfil-row"><span class="perfil-label">Stress Diário</span><span class="perfil-value">6/10</span></div>
+      <div class="perfil-row"><span class="perfil-label">Disciplina</span><span class="perfil-value">9/10 ⭐</span></div>
+    </div>
+    <div class="section-title">Objetivo</div>
+    <div class="card">
+      <div style="font-size:13.5px; line-height:1.5;"><b>Completar a São Silvestre (15 km · 31/12) sem parar</b>, chegar aos 80 kg e acabar com a dor no joelho depois dos longões.<br><br>Você já perdeu 24 kg com treino e dieta. Agora o foco é chegar inteiro na linha de chegada.</div>
+    </div>
+    <div class="section-title">Sua semana</div>
+    <div class="card">
+      <div class="semana-row"><div class="semana-dia">Seg</div><div class="semana-txt">Corrida leve na esteira + Superiores</div></div>
+      <div class="semana-row"><div class="semana-dia">Ter</div><div class="semana-txt">Inferiores (força)</div></div>
+      <div class="semana-row"><div class="semana-dia">Qua</div><div class="semana-txt">Superior + core</div></div>
+      <div class="semana-row"><div class="semana-dia">Qui</div><div class="semana-txt">Corrida de qualidade na rua + core</div></div>
+      <div class="semana-row"><div class="semana-dia">Sex</div><div class="semana-txt">Prevenção (sem impacto)</div></div>
+      <div class="semana-row"><div class="semana-dia">Sáb</div><div class="semana-txt">Longão na rua + alongamento geral</div></div>
+      <div class="semana-row"><div class="semana-dia">Dom</div><div class="semana-txt">Rolo + alongamento + yoga</div></div>
+    </div>
+    <div class="section-title">Pontos de atenção</div>
+    <div class="card">
+      <div class="atencao-item"><b>Anemia talassêmica</b>Nada de exercícios com a cabeça abaixo do corpo, que apertem a barriga ou burpee. Nunca prenda o ar. Levante do chão sempre devagar. Se vier o "teto preto", sente e respire antes de continuar.</div>
+      <div class="atencao-item"><b>Joelho esquerdo (menisco operado)</b>Leg press e agachamentos até ~90°. Descidas com passada curta. Dor 3 ou mais no dia seguinte à corrida: me avise.</div>
+      <div class="atencao-item"><b>Lombar</b>Coluna firme no stiff e nas rotações. Evite extensão e flexão máximas.</div>
+      <div class="atencao-item"><b>Ombro direito (operado)</b>Nada atrás da cabeça. Elevações só até a altura do ombro.</div>
+      <div class="atencao-item"><b>Cotovelos (epicondilite)</b>Pegada neutra sempre que der. Use strap quando a carga pesar na mão.</div>
+      <div class="atencao-item"><b>Yoga e alongamento</b>Pule saudação ao sol, gato/vaca e cobra. Nada de cabeça para baixo.</div>
+      <div class="atencao-item"><b>Alimentação</b>Shake às 11h mesmo sem fome. Nos longões, coma 1h30 antes.</div>
+    </div>
+    <div class="save-bar">
+      <button class="save-btn" id="btnSalvarPerfil">Salvar peso</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">Salvo!</div>
+
+<script>
+const CORE = {slug:"core", nome:"Fortalecimento de Core · Método Hellora", tipo:"grupo", subItems:[
+  {nome:"Respiração Diafragmática", series:2, reps:"10"},
+  {nome:"Dead Bug", series:2, reps:"10"},
+  {nome:"Glute Squeeze", series:2, reps:"10"}
+]};
+const MOB = {slug:"mobilidade", nome:"Mobilidade rápida", tipo:"info", texto:"No início do treino (~5 min): solte quadril, tornozelo e ombro."};
+
+const TREINOS = {
+  "seg": {label:"Seg", titulo:"Segunda · Superiores", sub:"Depois da corrida leve de 5–6 km na esteira (aba Corrida)", exercicios:[
+    MOB, CORE,
+    {slug:"puxada-neutra", nome:"Puxada alta pegada neutra", series:3, reps:"12", descanso:"60–90 s", load:true},
+    {slug:"remada-triangulo", nome:"Remada baixa com triângulo", series:3, reps:"12", descanso:"60–90 s", load:true},
+    {slug:"supino-inclinado", nome:"Supino inclinado", series:3, reps:"12", descanso:"60–90 s", load:true},
+    {slug:"elevacao-lateral", nome:"Elevação lateral", series:3, reps:"12", descanso:"60 s", load:true, obs:"Com moderação · só até a altura do ombro"},
+    {slug:"crucifixo-invertido", nome:"Crucifixo invertido", series:3, reps:"10", descanso:"60 s", load:true},
+    {slug:"rosca-martelo", nome:"Rosca martelo na polia", series:2, reps:"12", descanso:"60 s", load:true},
+    {slug:"triceps-corda", nome:"Tríceps corda na polia", series:2, reps:"12", descanso:"60 s", load:true}
+  ]},
+  "ter": {label:"Ter", titulo:"Terça · Inferiores (força)", sub:"Dia mais pesado de perna", exercicios:[
+    MOB, CORE,
+    {slug:"hack", nome:"Agachamento hack", series:4, reps:"10", descanso:"90–120 s", load:true, obs:"Até ~90° de joelho"},
+    {slug:"stiff", nome:"Stiff com halter", series:3, reps:"10", descanso:"90 s", load:true, obs:"Coluna reta · strap se o cotovelo reclamar"},
+    {slug:"leg-unilateral", nome:"Leg press horizontal unilateral", series:3, reps:"10 cada perna", descanso:"60–90 s", load:true, obs:"Descida até ~90° de joelho"},
+    {slug:"flexora", nome:"Cadeira flexora", series:3, reps:"10", descanso:"60–90 s", load:true},
+    {slug:"extensora", nome:"Cadeira extensora", series:3, reps:"10", descanso:"60 s", load:true, obs:"Amplitude sem dor"},
+    {slug:"abdutora", nome:"Cadeira abdutora", series:3, reps:"12", descanso:"60 s", load:true},
+    {slug:"panturrilha-pe", nome:"Panturrilha em pé", series:3, reps:"15", descanso:"45–60 s", load:true}
+  ]},
+  "qua": {label:"Qua", titulo:"Quarta · Superior + core", sub:"", exercicios:[
+    MOB, CORE,
+    {slug:"supino-articulado", nome:"Supino articulado na máquina", series:3, reps:"10", descanso:"60–90 s", load:true},
+    {slug:"puxada-supinada", nome:"Puxada alta supinada", series:3, reps:"10", descanso:"60–90 s", load:true},
+    {slug:"remada-aberta", nome:"Remada baixa aberta (barra anatômica)", series:3, reps:"10", descanso:"60–90 s", load:true},
+    {slug:"desenvolvimento", nome:"Desenvolvimento na máquina (pegada neutra)", series:3, reps:"10", descanso:"60–90 s", load:true},
+    {slug:"elevacao-lateral", nome:"Elevação lateral", series:3, reps:"10", descanso:"60 s", load:true, obs:"Até a altura do ombro"},
+    {slug:"rotacao-tronco", nome:"Rotação de tronco na polia", series:3, reps:"10 cada lado", descanso:"45 s", load:true, obs:"Carga leve · lombar firme, o giro sai do quadril"},
+    {slug:"pallof", nome:"Pallof press", series:3, reps:"10 cada lado", descanso:"45 s", load:true},
+    {slug:"prancha-lateral", nome:"Prancha lateral", series:3, reps:"30 s cada lado", descanso:"30 s", obs:"Respire o tempo todo"}
+  ]},
+  "qui": {label:"Qui", titulo:"Quinta · Corrida na rua + core", sub:"Depois do treino de qualidade (aba Corrida)", exercicios:[
+    {slug:"alongamento-pernas", nome:"Alongamento de pernas", tipo:"simples", texto:"~5 min: panturrilha, posterior, quadríceps e glúteo."},
+    {slug:"core-qui", nome:"Core pós-corrida", tipo:"grupo", subItems:[
+      {nome:"Respiração Diafragmática", series:2, reps:"10"},
+      {nome:"Dead Bug com peso (caneleira + halter leve)", series:2, reps:"10"},
+      {nome:"Prancha lateral", series:2, reps:"45 s cada lado"},
+      {nome:"Bird Dog (sem peso)", series:2, reps:"10 cada lado"},
+      {nome:"Prancha frontal", series:2, reps:"45 s"}
+    ], obs:"Nas pranchas, respire o tempo todo, sem prender o ar."}
+  ]},
+  "sex": {label:"Sex", titulo:"Sexta · Prevenção", sub:"Véspera do longão: sem impacto e sem carga pesada de perna", exercicios:[
+    MOB, CORE,
+    {slug:"abducao-polia", nome:"Abdução de quadril na polia unilateral", series:3, reps:"10 cada lado", descanso:"45 s", load:true},
+    {slug:"step-down", nome:"Step-down excêntrico", series:3, reps:"8 cada lado", descanso:"45–60 s", obs:"Descida em 3 segundos"},
+    {slug:"panturrilha-sentado", nome:"Panturrilha sentado", series:3, reps:"15", descanso:"45 s", load:true},
+    {slug:"tibial", nome:"Elevação da ponta do pé (tibial)", series:2, reps:"15", descanso:"45 s", obs:"Com contração no topo"},
+    {slug:"manguito", nome:"Rotação externa na polia (manguito)", series:2, reps:"15 cada braço", descanso:"45 s", load:true, obs:"Carga leve"},
+    {slug:"pallof-sex", nome:"Pallof press", series:2, reps:"10 cada lado", descanso:"45 s", load:true}
+  ]},
+  "sab": {label:"Sáb", titulo:"Sábado · Longão na rua", sub:"O treino do dia está na aba Corrida", exercicios:[
+    {slug:"alongamento-geral-sab", nome:"Alongamento geral", tipo:"simples", texto:"Depois do longão, do jeito que você preferir."}
+  ]},
+  "dom": {label:"Dom", titulo:"Domingo · Mobilidade", sub:"Nada de corrida, pulo ou escada. Se quiser se mexer: até 30 min de caminhada ou bike leve.", exercicios:[
+    {slug:"rolo", nome:"Liberação com rolo nas pernas", tipo:"simples", texto:"~1 min por região: panturrilha, quadríceps, lateral da coxa (leve) e glúteo."},
+    {slug:"alongamento-video", nome:"Alongamento geral", tipo:"simples", texto:"Vídeo do Google Drive."},
+    {slug:"yoga", nome:"Sessão de yoga guiada", tipo:"simples", texto:"Vídeo à sua escolha no YouTube. Pule saudação ao sol, gato/vaca e cobra, nada de cabeça para baixo e levante do chão devagar."}
+  ]}
+};
+
+const SEMANAS = [
+  {n:0, ini:"2026-11-05", label:"05/11"}, {n:1, ini:"2026-11-09", label:"09/11"}, {n:2, ini:"2026-11-16", label:"16/11"},
+  {n:3, ini:"2026-11-23", label:"23/11"}, {n:4, ini:"2026-11-30", label:"30/11"}, {n:5, ini:"2026-12-07", label:"07/12"},
+  {n:6, ini:"2026-12-14", label:"14/12"}, {n:7, ini:"2026-12-21", label:"21/12"}, {n:8, ini:"2026-12-28", label:"28/12"}
+];
+const NOTAS_TREINO = {
+  0: "Semana de adaptação: começa na quinta (05/11). Faça o treino a partir de quinta.",
+  4: "Semana de recuperação: tire 1 série de cada exercício de perna (terça e sexta).",
+  5: "Sábado é o ensaio geral dos 15 km: sexta bem leve.",
+  7: "Começa o polimento: mantenha as cargas, sem buscar recorde.",
+  8: "Semana da prova! Terça: só mobilidade + core. Quarta: superior leve. Nada de perna pesada. Quinta (31/12) é a São Silvestre."
+};
+const NOTAS_CORRIDA = {
+  0: "Semana de adaptação: o objetivo é aprender o ritmo novo, não correr rápido.",
+  4: "Semana de recuperação: menos volume para o corpo absorver o treino.",
+  5: "Semana do ensaio geral: no sábado, mesmo horário, comida e tênis da prova.",
+  7: "Polimento: o volume cai para você chegar descansado na prova.",
+  8: "Semana da prova: terça e quarta sem corrida. Confie no treino!"
+};
+
+const CORRIDA = {"0": [{"data": "05/11", "dia": "Qui", "tipo": "Adaptação", "rota": "R1 · Pista", "como": "1 km descida leve + 4 km na pista + 1 km subida leve, tudo contínuo. Aprender a sentir o 7:00.", "km": 6, "zona": "Z1 · 7:00–7:20"}, {"data": "07/11", "dia": "Sáb", "tipo": "Longão · teste", "rota": "R3 · Ibirapuera (3 voltas)", "como": "1 km descida + 3 voltas + 1 km extra no parque + 1 km volta. É o teste da dor 6h depois com o ritmo novo.", "km": 12, "zona": "Pace do longão"}], "1": [{"data": "09/11", "dia": "Seg", "tipo": "Regenerativo", "rota": "Esteira", "como": "Contínuo, inclinação 1%.", "km": 5, "zona": "Z1"}, {"data": "12/11", "dia": "Qui", "tipo": "Subidas", "rota": "Subida de 500 m", "como": "2 km de aquecimento leve no plano + 4× subida de 500 m forte (descida trotando, passada curta) + 1 km solto.", "km": 7, "zona": "Subida 8/10"}, {"data": "14/11", "dia": "Sáb", "tipo": "Longão", "rota": "R3 · Ibirapuera (3 voltas)", "como": "1 km descida + 3 voltas + 1 km extra no parque + 1 km volta.", "km": 12, "zona": "Pace do longão"}], "2": [{"data": "16/11", "dia": "Seg", "tipo": "Regenerativo", "rota": "Esteira", "como": "Contínuo, inclinação 1%.", "km": 5, "zona": "Z1"}, {"data": "19/11", "dia": "Qui", "tipo": "Ritmo", "rota": "R1 · Pista", "como": "1 km descida + 1 km aquecimento na pista + 3× 1,5 km em Z3 (2 min trotando entre os blocos) + 0,5 km solto + 1 km volta subindo leve.", "km": 9, "zona": "Z3 · 6:10–6:25"}, {"data": "21/11", "dia": "Sáb", "tipo": "Longão", "rota": "R3 · Ibirapuera (3 voltas)", "como": "1 km descida + 3 voltas + 2 km extra no parque + 1 km volta.", "km": 13, "zona": "Pace do longão"}], "3": [{"data": "23/11", "dia": "Seg", "tipo": "Regenerativo", "rota": "Esteira", "como": "Contínuo, inclinação 1%.", "km": 6, "zona": "Z1"}, {"data": "26/11", "dia": "Qui", "tipo": "Subidas", "rota": "Subida de 500 m", "como": "2 km de aquecimento + 5× subida de 500 m (descida trotando) + 1 km solto.", "km": 8, "zona": "Subida 8/10"}, {"data": "28/11", "dia": "Sáb", "tipo": "Longão", "rota": "R3 · Ibirapuera (4 voltas)", "como": "1 km descida + 4 voltas + 1 km volta. Termina na subida: manter o esforço até a porta de casa.", "km": 14, "zona": "Pace do longão"}], "4": [{"data": "30/11", "dia": "Seg", "tipo": "Regenerativo", "rota": "Esteira", "como": "Contínuo, inclinação 1%. SEMANA DE RECUPERAÇÃO.", "km": 5, "zona": "Z1"}, {"data": "03/12", "dia": "Qui", "tipo": "Leve com estímulos", "rota": "R1 · Pista", "como": "1 km descida + 4 km na pista com 6× 1 min um pouco mais forte (2 min leve entre) + 1 km subida leve.", "km": 6, "zona": "Z1 + estímulos Z2"}, {"data": "05/12", "dia": "Sáb", "tipo": "Longão curto", "rota": "R3 · Ibirapuera (2 voltas)", "como": "1 km descida + 2 voltas + 2 km extra no parque + 1 km volta.", "km": 10, "zona": "Pace do longão"}], "5": [{"data": "07/12", "dia": "Seg", "tipo": "Regenerativo", "rota": "Esteira", "como": "Contínuo, inclinação 1%.", "km": 6, "zona": "Z1"}, {"data": "10/12", "dia": "Qui", "tipo": "Progressivo", "rota": "R1 · Pista", "como": "1 km descida a 7:10 + 5 km na pista baixando o ritmo aos poucos até 6:30 + 1 km volta subindo leve.", "km": 7, "zona": "7:10 → 6:30"}, {"data": "12/12", "dia": "Sáb", "tipo": "ENSAIO GERAL", "rota": "R3 · Ibirapuera (4 voltas)", "como": "1 km descida controlada (treino da largada) + 4 voltas + 1 km extra + 1 km volta subindo (treino da Brigadeiro). Mesmo horário, comida e tênis da prova.", "km": 15, "zona": "Pace do longão"}], "6": [{"data": "14/12", "dia": "Seg", "tipo": "Regenerativo", "rota": "Esteira", "como": "Contínuo, inclinação 1%.", "km": 6, "zona": "Z1"}, {"data": "17/12", "dia": "Qui", "tipo": "Subidas", "rota": "Subida de 500 m", "como": "2 km de aquecimento + 4× subida de 500 m (descida trotando) + 1 km solto.", "km": 7, "zona": "Subida 8/10"}, {"data": "19/12", "dia": "Sáb", "tipo": "Longão", "rota": "R3 · Ibirapuera (3 voltas)", "como": "1 km descida + 3 voltas + 1 km extra no parque + 1 km volta.", "km": 12, "zona": "Pace do longão"}], "7": [{"data": "21/12", "dia": "Seg", "tipo": "Regenerativo", "rota": "Esteira", "como": "Contínuo, inclinação 1%. Início do polimento.", "km": 5, "zona": "Z1"}, {"data": "24/12", "dia": "Qui", "tipo": "Ritmo de prova", "rota": "R1 · Pista", "como": "1 km descida + 4 km na pista com 4× 1 km em Z2 (2 min leve entre) + 1 km subida leve.", "km": 6, "zona": "Z2 · 6:50–7:00"}, {"data": "26/12", "dia": "Sáb", "tipo": "Leve", "rota": "R2 · Paulista", "como": "Rota completa da Paulista, bem leve. Conhecer o asfalto da largada e da chegada.", "km": 8, "zona": "Z1"}], "8": [{"data": "28/12", "dia": "Seg", "tipo": "Soltura", "rota": "Esteira", "como": "Bem leve. Terça e quarta sem corrida.", "km": 4, "zona": "Z1"}, {"data": "31/12", "dia": "Qui", "tipo": "SÃO SILVESTRE 🏁", "rota": "Prova", "como": "Largada em descida: segurar o ritmo nos 3 primeiros km. Brigadeiro no final: passada curta, braço ajudando.", "km": 15, "zona": "Pace do longão"}]};
+const GUIA = [{"nome": "Respiração diafragmática", "pos": "Deitado de barriga para cima, joelhos dobrados, uma mão no peito e outra na barriga.", "mec": "Inspire pelo nariz enchendo a barriga (a mão de baixo sobe, a de cima quase não mexe). Solte o ar devagar pela boca, deixando a barriga descer.", "dica": "É pela barriga, não pelas costelas. Se ficar tonto, respire mais devagar."}, {"nome": "Dead bug (e dead bug com peso)", "pos": "Deitado, braços esticados para o teto, quadril e joelhos a 90°. Lombar encostada no chão. Na quinta: caneleira nos tornozelos e halter leve nas mãos.", "mec": "Estique um braço para trás e a perna oposta para a frente, sem tirar a lombar do chão. Volte e troque o lado.", "dica": "Solte o ar enquanto estica. Se a lombar descolar, diminua a amplitude."}, {"nome": "Glute squeeze", "pos": "Deitado de barriga para cima, joelhos dobrados, pés apoiados na largura do quadril.", "mec": "Contraia o glúteo e suba o quadril só um pouco, segure 2 s e desça devagar.", "dica": "Sobe pouco: o objetivo é sentir o glúteo, não arquear a lombar."}, {"nome": "Puxada alta pegada neutra", "pos": "Sentado com as coxas presas no apoio, mãos no puxador neutro (palmas uma de frente para a outra), tronco levemente inclinado para trás.", "mec": "Puxe levando os cotovelos para baixo e para trás até o puxador chegar perto do queixo. Volte controlando até esticar os braços.", "dica": "Pense em levar os cotovelos ao bolso. Ombros longe das orelhas."}, {"nome": "Remada baixa com triângulo", "pos": "Sentado, pés no apoio, joelhos levemente dobrados, coluna reta, segurando o triângulo.", "mec": "Puxe o triângulo até a parte de baixo da barriga, juntando as escápulas. Volte devagar sem curvar a coluna.", "dica": "O tronco fica parado: quem trabalha são as costas, não o balanço."}, {"nome": "Supino inclinado", "pos": "Banco inclinado (30–45°), escápulas juntas e encaixadas no banco, pés firmes no chão.", "mec": "Desça a carga até a altura do peito com cotovelos a ~45° do corpo. Empurre de volta sem travar os cotovelos.", "dica": "Não abra os cotovelos totalmente para o lado: protege o ombro direito."}, {"nome": "Elevação lateral", "pos": "Em pé, halteres ao lado do corpo, joelhos levemente soltos, tronco firme.", "mec": "Suba os braços para o lado até a altura do ombro, cotovelos levemente dobrados. Desça devagar.", "dica": "Nunca acima da altura do ombro (ombro operado). Carga moderada, sem balanço."}, {"nome": "Crucifixo invertido", "pos": "Sentado na máquina de frente para o encosto, braços esticados à frente segurando as alças.", "mec": "Abra os braços para trás, juntando as escápulas, até a linha do corpo. Volte controlando.", "dica": "Movimento curto e controlado: é o ombro de trás e o meio das costas."}, {"nome": "Rosca martelo na polia", "pos": "Em pé de frente para a polia baixa, segurando a corda com as palmas viradas uma para a outra, cotovelos colados no corpo.", "mec": "Dobre os cotovelos subindo a corda até perto dos ombros. Desça devagar.", "dica": "Pegada neutra poupa o cotovelo. Cotovelo parado ao lado do corpo."}, {"nome": "Tríceps corda na polia", "pos": "Em pé de frente para a polia alta, cotovelos colados ao lado do corpo, segurando a corda.", "mec": "Estique os cotovelos levando a corda para baixo e abrindo as pontas no final. Volte até ~90°.", "dica": "Só o antebraço se mexe. Se o cotovelo doer, diminua a carga."}, {"nome": "Agachamento hack", "pos": "Costas apoiadas no encosto, ombros sob as almofadas, pés na largura do quadril no meio da plataforma.", "mec": "Desça dobrando joelhos e quadril até ~90° de joelho. Suba empurrando a plataforma com o pé inteiro.", "dica": "Joelhos na direção dos pés, sem cair para dentro. Não trave os joelhos no alto."}, {"nome": "Stiff com halter", "pos": "Em pé, halteres à frente das coxas, pés na largura do quadril, joelhos levemente dobrados. Strap se o cotovelo reclamar.", "mec": "Leve o quadril para trás, descendo os halteres rente às pernas até o meio da canela, com a coluna reta. Suba contraindo glúteo e posterior.", "dica": "A coluna não curva. Desça só até onde sentir o posterior alongar."}, {"nome": "Leg press horizontal unilateral", "pos": "Sentado com as costas apoiadas, um pé no meio da plataforma, o outro apoiado no chão ou no suporte.", "mec": "Dobre o joelho até ~90° e empurre de volta sem travar o joelho no final.", "dica": "Não passe de 90° (menisco). Joelho alinhado com o pé o tempo todo."}, {"nome": "Cadeira flexora", "pos": "Sentado, rolo de cima travando as coxas, rolo de baixo atrás dos tornozelos, joelho alinhado com o eixo da máquina.", "mec": "Dobre os joelhos puxando o rolo para baixo. Volte devagar.", "dica": "É a flexora sentada, que não aperta a barriga."}, {"nome": "Cadeira extensora", "pos": "Sentado com as costas apoiadas, joelho alinhado com o eixo, rolo na frente dos tornozelos.", "mec": "Estique os joelhos até quase travar, segure 1 s e desça devagar.", "dica": "Se o joelho reclamar em algum ponto, reduza a amplitude e a carga."}, {"nome": "Cadeira abdutora", "pos": "Sentado com as costas apoiadas, almofadas na lateral dos joelhos.", "mec": "Abra as pernas contra a resistência e volte devagar, sem deixar o peso bater.", "dica": "Glúteo médio: é ele que segura o joelho no lugar durante a corrida."}, {"nome": "Panturrilha em pé", "pos": "Na máquina ou no step, ponta dos pés na borda, joelhos esticados (sem travar).", "mec": "Suba na ponta dos pés o máximo possível, segure 1 s, desça alongando bem a panturrilha.", "dica": "Amplitude completa, sem quicar."}, {"nome": "Supino articulado na máquina", "pos": "Sentado, encosto ajustado para as manoplas ficarem na altura do meio do peito, escápulas juntas.", "mec": "Empurre as manoplas à frente até quase esticar os braços. Volte controlando.", "dica": "Cotovelos a ~45° do corpo. Solte o ar ao empurrar."}, {"nome": "Puxada alta supinada", "pos": "Sentado com as coxas presas, mãos na barra com as palmas para você, na largura dos ombros.", "mec": "Puxe a barra até perto do queixo levando os cotovelos para baixo. Volte até esticar.", "dica": "Peito para cima, sem jogar o corpo para trás."}, {"nome": "Remada baixa aberta (barra anatômica)", "pos": "Sentado, pés no apoio, segurando a barra anatômica aberta (o punho fica mais neutro).", "mec": "Puxe a barra até a parte de cima da barriga, cotovelos indo para trás e um pouco para fora. Volte devagar.", "dica": "Se o cotovelo reclamar, use strap ou volte para o triângulo."}, {"nome": "Desenvolvimento na máquina (pegada neutra)", "pos": "Sentado, costas apoiadas, manoplas na altura dos ombros com as palmas viradas uma para a outra.", "mec": "Empurre para cima até quase esticar os braços. Desça até a altura das orelhas.", "dica": "Nunca atrás da cabeça. Lombar apoiada no encosto."}, {"nome": "Rotação de tronco na polia", "pos": "Em pé de lado para a polia na altura do peito, braços esticados à frente segurando a pegada, pés afastados.", "mec": "Gire o tronco levando a pegada para o lado oposto, com o giro saindo do quadril e do meio das costas. Volte devagar.", "dica": "Carga leve e amplitude curta: a lombar fica firme e não torce."}, {"nome": "Pallof press", "pos": "Em pé de lado para a polia na altura do peito, segurando a pegada junto ao peito, pés na largura do quadril.", "mec": "Empurre a pegada à frente, esticando os braços, sem deixar o tronco girar. Segure 2 s e volte.", "dica": "O exercício é NÃO girar. Abdômen firme, respiração solta."}, {"nome": "Prancha lateral", "pos": "Deitado de lado, apoiado no antebraço (cotovelo embaixo do ombro), pernas esticadas uma sobre a outra.", "mec": "Suba o quadril até o corpo formar uma linha reta e segure o tempo pedido.", "dica": "Respire o tempo todo. Se cansar, apoie o joelho de baixo."}, {"nome": "Bird dog", "pos": "Em quatro apoios, mãos embaixo dos ombros, joelhos embaixo do quadril, coluna neutra.", "mec": "Estique um braço à frente e a perna oposta para trás até a linha do corpo. Volte e troque.", "dica": "Coluna parada: imagine um copo de água nas costas."}, {"nome": "Prancha frontal", "pos": "Apoiado nos antebraços e na ponta dos pés, cotovelos embaixo dos ombros, corpo em linha reta.", "mec": "Segure a posição o tempo pedido, com abdômen e glúteo contraídos.", "dica": "Respire o tempo todo, sem prender o ar. Quadril nem alto nem caído."}, {"nome": "Abdução de quadril na polia unilateral", "pos": "Em pé de lado para a polia baixa, caneleira no tornozelo de fora, mão apoiada na máquina.", "mec": "Leve a perna para o lado, afastando do corpo, sem inclinar o tronco. Volte devagar.", "dica": "Movimento pequeno e controlado: o glúteo médio trabalha, não a lombar."}, {"nome": "Step-down excêntrico", "pos": "Em pé em cima de um step baixo, apoiado em uma perna, a outra solta para fora.", "mec": "Desça o calcanhar da perna solta até encostar no chão em 3 s, dobrando o joelho de apoio. Suba.", "dica": "Joelho de apoio alinhado com o pé, sem cair para dentro. Treina a descida da prova."}, {"nome": "Panturrilha sentado", "pos": "Sentado na máquina, almofada sobre as coxas, ponta dos pés na plataforma.", "mec": "Suba os calcanhares o máximo possível, segure 1 s e desça alongando.", "dica": "Trabalha o sóleo, que absorve o impacto de cada passada."}, {"nome": "Elevação da ponta do pé (tibial)", "pos": "Encostado na parede com os calcanhares a um passo dela, pernas esticadas.", "mec": "Levante as pontas dos pés o máximo que der, contraia 1 s em cima e desça devagar.", "dica": "Ajuda a prevenir dor na canela com o aumento da corrida."}, {"nome": "Rotação externa de ombro na polia (manguito)", "pos": "Em pé de lado para a polia na altura do cotovelo, cotovelo colado ao corpo a 90°, toalha entre o cotovelo e o corpo.", "mec": "Gire o antebraço para fora, sem descolar o cotovelo. Volte devagar.", "dica": "Carga bem leve. Cuidado especial com o ombro direito."}, {"nome": "Liberação com rolo nas pernas", "pos": "Sentado ou deitado com o rolo embaixo da região: panturrilha, quadríceps, lateral da coxa ou glúteo.", "mec": "Role devagar de 30 s a 1 min por região, parando alguns segundos nos pontos mais sensíveis.", "dica": "Desconforto tudo bem, dor forte não. Na lateral da coxa, vá leve."}];
+
+const EVAL_CATS = [
+  {key:"dieta", label:"Concluiu a dieta", hint:"1 = não seguiu · 5 = seguiu 100%"},
+  {key:"energia", label:"Energia", hint:"1 = muito baixa · 5 = ótima"},
+  {key:"joelho", label:"Dor no joelho", hint:"1 = sem dor · 5 = muita dor"},
+  {key:"lombar", label:"Dor na lombar", hint:"1 = sem dor · 5 = muita dor"},
+  {key:"tontura", label:"Tontura / \"teto preto\"", hint:"1 = nenhuma vez · 5 = várias vezes"},
+  {key:"fome", label:"Fome à noite / vontade de doce", hint:"1 = tranquilo · 5 = muita"},
+  {key:"sono", label:"Qualidade do sono", hint:"1 = muito ruim · 5 = ótimo"}
+];
+
+const DIAS = ["seg","ter","qua","qui","sex","sab","dom"];
+
+function semanaPorData(){
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  let atual = 0;
+  SEMANAS.forEach(s=>{ const d = new Date(s.ini + "T00:00:00"); if (hoje >= d) atual = s.n; });
+  return atual;
+}
+function diaHoje(){
+  const d = new Date().getDay(); // 0 dom
+  return DIAS[(d + 6) % 7];
+}
+
+let state = {
+  peso: 84,
+  _currentDia: diaHoje(),
+  _currentWeek: semanaPorData(),
+  _runWeek: semanaPorData(),
+  _evalWeek: semanaPorData(),
+  evalNotas: {},
+  evalObs: {},
+  runs: {}
+};
+
+function keyFor(week, dia, slug){ return `w${week}-d${dia}-${slug}`; }
+
+function getLastLoad(dia, slug, week){
+  for (let w = week - 1; w >= 0; w--){
+    const k = keyFor(w, dia, slug);
+    if (state[k] && state[k].load) return state[k].load;
+  }
+  return '';
+}
+
+function saveLocal(){
+  try{ localStorage.setItem('joao_alberto_state', JSON.stringify(state)); }catch(e){}
+}
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem('joao_alberto_state');
+    if (raw) Object.assign(state, JSON.parse(raw));
+  }catch(e){}
+}
+
+let saveTimer = null;
+let saveInFlight = false;
+let savePendingAfterFlight = false;
+
+const firebaseConfig = {
+  databaseURL: "https://helloradana-consultoria-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ALUNO_ID = "joao-alberto";
+const stateRef = db.ref('/alunos/' + ALUNO_ID + '/state');
+
+function persist(){
+  saveLocal();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSaveToFirebase, 350);
+}
+function flushSaveToFirebase(){
+  if (saveInFlight){ savePendingAfterFlight = true; return; }
+  saveInFlight = true;
+  stateRef.set(state).catch(()=>{ console.warn('Firebase offline'); }).finally(()=>{
+    saveInFlight = false;
+    if (savePendingAfterFlight){ savePendingAfterFlight = false; flushSaveToFirebase(); }
+  });
+}
+function loadFromFirebase(cb){
+  stateRef.once('value').then(snap=>{
+    const val = snap.val();
+    if (val) Object.assign(state, val);
+    cb && cb();
+  }).catch(()=>{ cb && cb(); });
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    window.scrollTo({top:0});
+  });
+});
+
+function renderWeekChips(elId, current, onPick){
+  const el = document.getElementById(elId);
+  el.innerHTML = '';
+  SEMANAS.forEach(s=>{
+    const chip = document.createElement('div');
+    chip.className = 'week-chip' + (current === s.n ? ' active' : '');
+    chip.innerHTML = `Sem ${s.n}<small>${s.label}</small>`;
+    chip.addEventListener('click', ()=>onPick(s.n));
+    el.appendChild(chip);
+  });
+  const act = el.querySelector('.active');
+  if (act) act.scrollIntoView({inline:'center', block:'nearest'});
+}
+
+/* ---------- TREINO ---------- */
+function renderWeekSwitchTreino(){
+  renderWeekChips('weekSwitchTreino', state._currentWeek, (n)=>{
+    state._currentWeek = n; persist();
+    renderWeekSwitchTreino(); renderExercicios(); updateSemanaPill();
+  });
+}
+function renderTreinoSwitch(){
+  const el = document.getElementById('treinoSwitch');
+  el.innerHTML = '';
+  DIAS.forEach(key=>{
+    const chip = document.createElement('div');
+    chip.className = 'treino-chip' + (state._currentDia === key ? ' active' : '');
+    chip.textContent = TREINOS[key].label;
+    chip.addEventListener('click', ()=>{
+      state._currentDia = key; persist();
+      renderTreinoSwitch(); renderExercicios();
+    });
+    el.appendChild(chip);
+  });
+}
+function renderExercicios(){
+  const dia = state._currentDia;
+  const treino = TREINOS[dia];
+  const week = state._currentWeek;
+  const list = document.getElementById('exList');
+  const nota = NOTAS_TREINO[week];
+  document.getElementById('weekNoteTreino').innerHTML = nota ? `<div class="note">${nota}</div>` : '';
+  list.innerHTML = `<div class="day-title">${treino.titulo}</div>${treino.sub ? `<div class="day-sub">${treino.sub}</div>` : ''}`;
+
+  treino.exercicios.forEach(ex=>{
+    const k = keyFor(week, dia, ex.slug);
+    const saved = state[k] || {done:false, load:""};
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    if (ex.tipo === 'info'){
+      card.innerHTML = `<div class="ex-nome">${ex.nome}</div><div class="ex-obs">${ex.texto}</div>`;
+    } else if (ex.tipo === 'simples'){
+      card.innerHTML = `
+        <div class="card-head">
+          <div><div class="ex-nome">${ex.nome}</div></div>
+          <div class="check ${saved.done ? 'done' : ''}" data-key="${k}"></div>
+        </div>
+        <div class="ex-obs">${ex.texto}</div>`;
+    } else if (ex.tipo === 'grupo'){
+      const subHtml = ex.subItems.map(s=>`<div class="sub-item"><span>${s.nome}</span> — ${s.series}x ${s.reps}</div>`).join('');
+      card.innerHTML = `
+        <div class="card-head">
+          <div><div class="ex-nome">${ex.nome}</div></div>
+          <div class="check ${saved.done ? 'done' : ''}" data-key="${k}"></div>
+        </div>
+        <div style="margin-top:6px;">${subHtml}</div>
+        ${ex.obs ? `<div class="ex-obs">${ex.obs}</div>` : ''}`;
+    } else {
+      const loadValue = saved.load || (ex.load ? getLastLoad(dia, ex.slug, week) : '');
+      card.innerHTML = `
+        <div class="card-head">
+          <div><div class="ex-nome">${ex.nome}</div></div>
+          <div class="check ${saved.done ? 'done' : ''}" data-key="${k}"></div>
+        </div>
+        ${ex.obs ? `<div class="ex-obs">${ex.obs}</div>` : ''}
+        <div class="badges">
+          <div class="badge">${ex.series} séries</div>
+          <div class="badge">${ex.reps}</div>
+          <div class="badge">${ex.descanso}</div>
+          ${ex.load ? `<div class="mini-input">carga <input type="text" inputmode="decimal" placeholder="kg" data-load="${k}" value="${loadValue}"></div>` : ''}
+        </div>`;
+    }
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll('.check').forEach(chk=>{
+    chk.addEventListener('click', ()=>{
+      const k = chk.dataset.key;
+      const current = state[k] || {done:false, load:""};
+      current.done = !current.done;
+      state[k] = current;
+      chk.classList.toggle('done');
+      persist();
+    });
+  });
+  list.querySelectorAll('[data-load]').forEach(input=>{
+    input.addEventListener('input', ()=>{
+      const k = input.dataset.load;
+      const current = state[k] || {done:false, load:""};
+      current.load = input.value;
+      state[k] = current;
+      persist();
+    });
+  });
+}
+document.getElementById('btnSalvarTreino').addEventListener('click', ()=>{ persist(); showToast('Treino salvo!'); });
+
+/* ---------- CORRIDA ---------- */
+function renderWeekSwitchCorrida(){
+  renderWeekChips('weekSwitchCorrida', state._runWeek, (n)=>{
+    state._runWeek = n; persist();
+    renderWeekSwitchCorrida(); renderCorrida();
+  });
+}
+function renderCorrida(){
+  const w = state._runWeek;
+  const runs = CORRIDA[String(w)] || [];
+  const el = document.getElementById('runList');
+  const total = runs.reduce((a,r)=>a + r.km, 0);
+  const nota = NOTAS_CORRIDA[w];
+  el.innerHTML = `<div class="day-title">Semana ${w}</div><div class="day-sub">${total} km na semana</div>` + (nota ? `<div class="note">${nota}</div>` : '');
+  if (!state.runs) state.runs = {};
+
+  runs.forEach((r, i)=>{
+    const k = `w${w}-r${i}`;
+    const saved = state.runs[k] || {done:false, pace:""};
+    const destaque = (r.tipo === 'ENSAIO GERAL' || r.tipo.indexOf('SÃO SILVESTRE') === 0);
+    const card = document.createElement('div');
+    card.className = 'card' + (destaque ? ' destaque' : '');
+    card.innerHTML = `
+      <div class="card-head">
+        <div>
+          <div class="ex-nome">${r.dia} · ${r.tipo}</div>
+          <div class="run-head-date">${r.data}/2026</div>
+        </div>
+        <div class="check ${saved.done ? 'done' : ''}" data-run="${k}"></div>
+      </div>
+      <div class="badges">
+        <div class="badge dark">${r.km} km</div>
+        <div class="badge">${r.zona}</div>
+        <div class="mini-input">pace <input type="text" placeholder="0:00" data-pace="${k}" value="${saved.pace || ''}"></div>
+      </div>
+      <div class="rota-box">
+        <div class="rota-nome">📍 ${r.rota}</div>
+        <div class="rota-desc">${r.como}</div>
+      </div>`;
+    el.appendChild(card);
+  });
+
+  el.querySelectorAll('[data-run]').forEach(chk=>{
+    chk.addEventListener('click', ()=>{
+      const k = chk.dataset.run;
+      const cur = state.runs[k] || {done:false, pace:""};
+      cur.done = !cur.done; state.runs[k] = cur;
+      chk.classList.toggle('done'); persist();
+    });
+  });
+  el.querySelectorAll('[data-pace]').forEach(input=>{
+    input.addEventListener('input', ()=>{
+      const k = input.dataset.pace;
+      const cur = state.runs[k] || {done:false, pace:""};
+      cur.pace = input.value; state.runs[k] = cur; persist();
+    });
+  });
+}
+document.getElementById('btnSalvarCorrida').addEventListener('click', ()=>{ persist(); showToast('Corrida salva!'); });
+
+/* ---------- GUIA ---------- */
+function renderGuia(){
+  const el = document.getElementById('guiaList');
+  el.innerHTML = '';
+  GUIA.forEach(g=>{
+    const div = document.createElement('div');
+    div.className = 'guia-item';
+    div.innerHTML = `
+      <div class="ex-nome" style="font-size:14px;">${g.nome}</div>
+      <div class="guia-parte">📍 Posicionamento</div>
+      <div class="guia-desc">${g.pos}</div>
+      <div class="guia-parte">⚙️ Mecânica do Movimento</div>
+      <div class="guia-desc">${g.mec}</div>
+      <div class="guia-parte">💡 Dica</div>
+      <div class="guia-desc">${g.dica}</div>`;
+    el.appendChild(div);
+  });
+}
+
+/* ---------- AVALIAÇÃO ---------- */
+function renderWeekSwitch(){
+  renderWeekChips('weekSwitch', state._evalWeek, (n)=>{
+    state._evalWeek = n; persist();
+    renderWeekSwitch(); renderEvalCats();
+  });
+}
+function renderEvalCats(){
+  const el = document.getElementById('evalCats');
+  el.innerHTML = '';
+  const weekKey = state._evalWeek;
+  const notas = (state.evalNotas && state.evalNotas[weekKey]) || {};
+  EVAL_CATS.forEach(cat=>{
+    const div = document.createElement('div');
+    div.className = 'eval-cat';
+    let scaleHtml = '';
+    for (let n=1; n<=5; n++){
+      const active = notas[cat.key] === n ? ' active' : '';
+      scaleHtml += `<div class="eval-dot${active}" data-cat="${cat.key}" data-val="${n}">${n}</div>`;
+    }
+    div.innerHTML = `<div class="eval-cat-name">${cat.label}</div><div class="eval-cat-hint">${cat.hint}</div><div class="eval-scale">${scaleHtml}</div>`;
+    el.appendChild(div);
+  });
+  el.querySelectorAll('.eval-dot').forEach(dot=>{
+    dot.addEventListener('click', ()=>{
+      const cat = dot.dataset.cat;
+      const val = parseInt(dot.dataset.val);
+      if (!state.evalNotas) state.evalNotas = {};
+      if (!state.evalNotas[weekKey]) state.evalNotas[weekKey] = {};
+      state.evalNotas[weekKey][cat] = val;
+      persist(); renderEvalCats();
+    });
+  });
+  document.getElementById('evalObs').value = (state.evalObs && state.evalObs[weekKey]) || '';
+}
+document.getElementById('evalObs').addEventListener('input', (e)=>{
+  const weekKey = state._evalWeek;
+  if (!state.evalObs) state.evalObs = {};
+  state.evalObs[weekKey] = e.target.value;
+  persist();
+});
+document.getElementById('btnSalvarAvaliacao').addEventListener('click', ()=>{ persist(); showToast('Avaliação salva!'); });
+
+/* ---------- PERFIL ---------- */
+function renderPerfil(){
+  document.getElementById('pesoInput').value = state.peso != null ? state.peso : 84;
+}
+document.getElementById('btnSalvarPerfil').addEventListener('click', ()=>{
+  const val = parseFloat(document.getElementById('pesoInput').value);
+  if (!isNaN(val)) state.peso = val;
+  persist();
+  showToast('Peso atualizado!');
+});
+
+function updateSemanaPill(){
+  document.getElementById('semanaPill').textContent = 'Semana ' + state._currentWeek;
+}
+function renderCountdown(){
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const prova = new Date('2026-12-31T00:00:00');
+  const dias = Math.round((prova - hoje) / 86400000);
+  const el = document.getElementById('countdown');
+  if (dias > 1) el.innerHTML = `Faltam <b>${dias} dias</b> para a São Silvestre`;
+  else if (dias === 1) el.innerHTML = `<b>Amanhã</b> é a São Silvestre!`;
+  else if (dias === 0) el.innerHTML = `<b>Hoje é dia de São Silvestre!</b> 🏁`;
+  else el.innerHTML = `São Silvestre concluída 🏁`;
+}
+
+function renderAll(){
+  renderWeekSwitchTreino();
+  renderTreinoSwitch();
+  renderExercicios();
+  renderWeekSwitchCorrida();
+  renderCorrida();
+  renderGuia();
+  renderWeekSwitch();
+  renderEvalCats();
+  renderPerfil();
+  updateSemanaPill();
+  renderCountdown();
+}
+
+loadLocal();
+loadFromFirebase(()=>{
+  state._currentWeek = semanaPorData();
+  state._runWeek = semanaPorData();
+  state._evalWeek = semanaPorData();
+  state._currentDia = diaHoje();
+  renderAll();
+});
+</script>
+</body>
+</html>
